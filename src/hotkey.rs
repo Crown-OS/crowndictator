@@ -263,6 +263,18 @@ fn evdev_key(key: KeyCode) -> EvKey {
         KeyCode::Comma => EvKey::KEY_COMMA,
         KeyCode::Period => EvKey::KEY_DOT,
         KeyCode::Slash => EvKey::KEY_SLASH,
+        KeyCode::AudioVolumeUp => EvKey::KEY_VOLUMEUP,
+        KeyCode::AudioVolumeDown => EvKey::KEY_VOLUMEDOWN,
+        KeyCode::AudioVolumeMute => EvKey::KEY_MUTE,
+        KeyCode::MicrophoneMute => EvKey::KEY_MICMUTE,
+        KeyCode::MediaPlayPause => EvKey::KEY_PLAYPAUSE,
+        KeyCode::MediaStop => EvKey::KEY_STOPCD,
+        KeyCode::MediaTrackNext => EvKey::KEY_NEXTSONG,
+        KeyCode::MediaTrackPrevious => EvKey::KEY_PREVIOUSSONG,
+        KeyCode::BrightnessUp => EvKey::KEY_BRIGHTNESSUP,
+        KeyCode::BrightnessDown => EvKey::KEY_BRIGHTNESSDOWN,
+        KeyCode::KeyboardBrightnessUp => EvKey::KEY_KBDILLUMUP,
+        KeyCode::KeyboardBrightnessDown => EvKey::KEY_KBDILLUMDOWN,
     }
 }
 
