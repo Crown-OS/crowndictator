@@ -9,7 +9,7 @@ license = "MIT"
 crownshell = { path = "../crownshell" }
 # `~/.config/crownos/input.ron` — the switch, the microphone and the shortcut,
 # all written by the settings panel's Input page and followed live from here.
-crownos-config = { path = "../crownos-config" }
+crownos-config = { path = "../crownos-config", default-features = false }
 
 # Wayland / event loop (versions matched to crownshell)
 smithay-client-toolkit = "0.19"
@@ -33,7 +33,15 @@ anyhow = "1"
 log = "0.4"
 env_logger = "0.11"
 dirs = "6"
+unicode-segmentation = "1"
 
 [profile.release]
 lto = "thin"
 codegen-units = 1
+
+[profile.samply]
+inherits = "release"
+debug = true
+
+[patch.crates-io]
+vello_encoding = { path = "../vendor/vello_encoding-0.9.0" }

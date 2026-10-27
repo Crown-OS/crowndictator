@@ -23,10 +23,15 @@ mod hotkey;
 mod inject;
 mod settings;
 mod state;
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "consumed by the injector milestone")
+)]
+mod util;
 mod wav;
 mod waveform;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use crownshell::{Anchor, KeyboardInteractivity, Layer, WindowConfig};
 use smithay_client_toolkit::compositor::Region;
 use smithay_client_toolkit::shell::WaylandSurface;
