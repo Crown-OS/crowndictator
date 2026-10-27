@@ -66,9 +66,5 @@ pub fn push_wave(shared: &Shared, v: f32) {
 
 /// Copy the wave ring out in chronological order (oldest → newest).
 pub fn wave_snapshot(s: &VizState) -> [f32; WAVE_N] {
-    let mut out = [0.0; WAVE_N];
-    for i in 0..WAVE_N {
-        out[i] = s.wave[(s.wave_pos + i) % WAVE_N];
-    }
-    out
+    std::array::from_fn(|age| s.wave[(s.wave_pos + age) % WAVE_N])
 }
