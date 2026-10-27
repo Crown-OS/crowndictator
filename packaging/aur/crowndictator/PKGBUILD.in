@@ -1,0 +1,63 @@
+# Maintainer: marvelxcodes <ramakrishnan0046@gmail.com>
+#
+# Template — @PKGVER@ and the sibling commits are filled in by `just aur-render`.
+# Edit this file in the crowndictator repo, never the rendered copy in target/aur.
+
+pkgname=crowndictator
+pkgver=@PKGVER@
+pkgrel=1
+pkgdesc="Push-to-talk voice dictation for Wayland, transcribed locally with Parakeet TDT"
+arch=('x86_64')
+url="https://github.com/Crown-OS/crowndictator"
+license=('MIT')
+depends=('alsa-lib' 'gcc-libs' 'glibc' 'libxkbcommon' 'vulkan-icd-loader' 'wayland')
+makedepends=('cargo' 'git')
+optdepends=(
+  'wtype: type transcriptions through the wlr virtual-keyboard protocol (preferred)'
+  'ydotool: type transcriptions through uinput, needs ydotoold running'
+  'wl-clipboard: clipboard fallback when no typing tool is installed'
+  'libnotify: desktop notification for the clipboard fallback'
+  'cuda: GPU transcription'
+  'cudnn: GPU transcription'
+)
+install="$pkgname.install"
+
+# crownshell and crownos-config are path dependencies of crowndictator, so they
+# are checked out beside it rather than pulled from crates.io. The source names
+# below are what make ../crownshell and ../crownos-config resolve inside $srcdir.
+_crownshell_commit=@CROWNSHELL_COMMIT@
+_crownos_config_commit=@CROWNOS_CONFIG_COMMIT@
+
+source=(
+  "$pkgname::git+$url.git#tag=v$pkgver"
+  "crownshell::git+https://github.com/Crown-OS/crownshell.git#commit=$_crownshell_commit"
+  "crownos-config::git+https://github.com/Crown-OS/crownos-config.git#commit=$_crownos_config_commit"
+)
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+  cd "$srcdir/$pkgname"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/^host: //p')"
+}
+
+build() {
+  cd "$srcdir/$pkgname"
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+
+  # NOTE: the `ort` crate downloads a prebuilt ONNX Runtime during this build,
+  # so it needs network access (cargo itself stays offline via --frozen).
+  # To link the system runtime instead, add onnxruntime-cuda to depends and
+  # makedepends and export ORT_LIB_LOCATION=/usr/lib here — only worth doing
+  # while the packaged runtime matches the version ort 2.0.0-rc.12 expects.
+  cargo build --frozen --release
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  install -Dm0755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm0644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -1,0 +1,72 @@
+# Maintainer: marvelxcodes <ramakrishnan0046@gmail.com>
+#
+# Template — the sibling commits are filled in by `just aur-render`.
+# Edit this file in the crowndictator repo, never the rendered copy in target/aur.
+#
+# crowndictator itself tracks master here; the two sibling crates are still
+# pinned, because a VCS package that moves three repos at once cannot be
+# reproduced or bisected when it breaks.
+
+pkgname=crowndictator-git
+pkgver=0.1.0.r0.gunknown
+pkgrel=1
+pkgdesc="Push-to-talk voice dictation for Wayland, transcribed locally with Parakeet TDT (git)"
+arch=('x86_64')
+url="https://github.com/Crown-OS/crowndictator"
+license=('MIT')
+depends=('alsa-lib' 'gcc-libs' 'glibc' 'libxkbcommon' 'vulkan-icd-loader' 'wayland')
+makedepends=('cargo' 'git')
+optdepends=(
+  'wtype: type transcriptions through the wlr virtual-keyboard protocol (preferred)'
+  'ydotool: type transcriptions through uinput, needs ydotoold running'
+  'wl-clipboard: clipboard fallback when no typing tool is installed'
+  'libnotify: desktop notification for the clipboard fallback'
+  'cuda: GPU transcription'
+  'cudnn: GPU transcription'
+)
+provides=('crowndictator')
+conflicts=('crowndictator')
+install="$pkgname.install"
+
+_crownshell_commit=@CROWNSHELL_COMMIT@
+_crownos_config_commit=@CROWNOS_CONFIG_COMMIT@
+
+source=(
+  "crowndictator::git+$url.git"
+  "crownshell::git+https://github.com/Crown-OS/crownshell.git#commit=$_crownshell_commit"
+  "crownos-config::git+https://github.com/Crown-OS/crownos-config.git#commit=$_crownos_config_commit"
+)
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP')
+
+pkgver() {
+  cd "$srcdir/crowndictator"
+  local ver
+  ver="$(sed -n 's/^version *= *"\(.*\)"/\1/p' Cargo.toml | head -1)"
+  printf '%s.r%s.g%s' "$ver" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+prepare() {
+  cd "$srcdir/crowndictator"
+  export RUSTUP_TOOLCHAIN=stable
+  # Not --locked: master's Cargo.lock can lag the pinned sibling checkouts.
+  cargo fetch --target "$(rustc -vV | sed -n 's/^host: //p')"
+}
+
+build() {
+  cd "$srcdir/crowndictator"
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+
+  # NOTE: the `ort` crate downloads a prebuilt ONNX Runtime during this build,
+  # so it needs network access. See the crowndictator PKGBUILD for the
+  # ORT_LIB_LOCATION alternative.
+  cargo build --offline --release
+}
+
+package() {
+  cd "$srcdir/crowndictator"
+  install -Dm0755 target/release/crowndictator "$pkgdir/usr/bin/crowndictator"
+  install -Dm0644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

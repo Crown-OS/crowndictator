@@ -1,0 +1,25 @@
+post_install() {
+  cat <<'EOF'
+
+crowndictator reads /dev/input directly to catch its push-to-talk chord on any
+compositor, so it needs read access there. Add yourself to the input group and
+log back in:
+
+    sudo usermod -aG input "$USER"
+
+To type transcriptions into the focused window it looks for `wtype`, then
+`ydotool` (with ydotoold running); without either it falls back to copying to
+the clipboard through `wl-copy`.
+
+The shortcut, microphone and GPU switch come from ~/.config/crownos/input.ron,
+which the CrownOS settings panel writes and the daemon follows live.
+
+The Parakeet TDT model downloads from Hugging Face on first use — roughly
+700 MB for the int8 (CPU) variant, 2.5 GB for fp32 (CUDA).
+
+EOF
+}
+
+post_upgrade() {
+  :
+}
