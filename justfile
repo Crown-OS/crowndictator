@@ -160,7 +160,7 @@ aur-render: aur-clone
 
     # Both sibling crates are path dependencies, so the package can only be
     # reproduced from commits that actually exist on their remotes.
-    shell_sha="$({{just_executable()}} pin crownshell)"
+    ui_sha="$({{just_executable()}} pin crownui)"
     config_sha="$({{just_executable()}} pin crownos-config)"
 
     if [[ "{{pkg}}" != *-git ]]; then
@@ -171,13 +171,13 @@ aur-render: aur-clone
     fi
 
     sed -e "s|@PKGVER@|{{version}}|g" \
-        -e "s|@CROWNSHELL_COMMIT@|$shell_sha|g" \
+        -e "s|@CROWNUI_COMMIT@|$ui_sha|g" \
         -e "s|@CROWNOS_CONFIG_COMMIT@|$config_sha|g" \
         "$src/PKGBUILD.in" > "$dest/PKGBUILD"
     cp "{{repo}}/packaging/aur/crowndictator.install" "$dest/{{pkg}}.install"
 
     ( cd "$dest" && makepkg --printsrcinfo > .SRCINFO )
-    echo "rendered $dest/PKGBUILD (crownshell ${shell_sha:0:8}, crownos-config ${config_sha:0:8})"
+    echo "rendered $dest/PKGBUILD (crownui ${ui_sha:0:8}, crownos-config ${config_sha:0:8})"
 
 # Build the staged package with makepkg, end to end (clones sources, compiles).
 aur-build:

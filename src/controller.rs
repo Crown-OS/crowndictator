@@ -25,7 +25,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::time::Duration;
 
-use calloop::channel::Sender as WakeSender;
 use crownos_config::schema::Input;
 
 use crate::asr::{self, AsrCmd};
@@ -34,6 +33,7 @@ use crate::hotkey::{self, HotkeyEvent};
 use crate::inject;
 use crate::settings;
 use crate::state::{Phase, Shared, set_phase};
+use crate::util::wake::Wake;
 
 /// Recordings shorter than this are treated as an accidental tap.
 const MIN_UTTERANCE: Duration = Duration::from_millis(350);
@@ -57,11 +57,7 @@ enum Event {
     Settings(Input),
 }
 
-fn wake(ui: &WakeSender<()>) {
-    let _ = ui.send(());
-}
-
-pub fn spawn(shared: Shared, ui: WakeSender<()>, opts: Options) {
+pub fn spawn(shared: Shared, ui: Wake, opts: Options) {
     let mut input = settings::load();
 
     // Shared with the ASR thread, which reads it whenever it loads the model.
@@ -135,7 +131,7 @@ pub fn spawn(shared: Shared, ui: WakeSender<()>, opts: Options) {
                                 set_phase(&shared, Phase::Error);
                             }
                         }
-                        wake(&ui);
+                        ui.wake();
                     }
 
                     Event::Hotkey(HotkeyEvent::Released) => {
@@ -145,11 +141,11 @@ pub fn spawn(shared: Shared, ui: WakeSender<()>, opts: Options) {
                         if secs < MIN_UTTERANCE.as_secs_f32() {
                             log::debug!("controller: {secs:.2}s tap ignored");
                             set_phase(&shared, Phase::Hidden);
-                            wake(&ui);
+                            ui.wake();
                             continue;
                         }
                         set_phase(&shared, Phase::Thinking);
-                        wake(&ui);
+                        ui.wake();
 
                         let samples_16k = audio::resample_to_16k(&samples, rate);
                         let (reply_tx, reply_rx) = mpsc::channel();
@@ -183,7 +179,7 @@ pub fn spawn(shared: Shared, ui: WakeSender<()>, opts: Options) {
                                 set_phase(&shared, Phase::Error);
                             }
                         }
-                        wake(&ui);
+                        ui.wake();
                     }
                 }
             }
@@ -210,14 +206,14 @@ fn announce(input: &Input) {
 
 /// `--demo`: cycle the overlay through its states with synthetic audio so
 /// the visuals can be tuned/verified without speaking or loading the model.
-pub fn spawn_demo(shared: Shared, ui: WakeSender<()>) {
+pub fn spawn_demo(shared: Shared, ui: Wake) {
     std::thread::Builder::new()
         .name("demo".into())
         .spawn(move || {
             let t0 = std::time::Instant::now();
             loop {
                 set_phase(&shared, Phase::Listening);
-                wake(&ui);
+                ui.wake();
                 let until = std::time::Instant::now() + Duration::from_secs(5);
                 while std::time::Instant::now() < until {
                     // Syllable-rate bursts under a slower breath envelope, so
@@ -229,10 +225,10 @@ pub fn spawn_demo(shared: Shared, ui: WakeSender<()>) {
                     std::thread::sleep(Duration::from_millis(21));
                 }
                 set_phase(&shared, Phase::Thinking);
-                wake(&ui);
+                ui.wake();
                 std::thread::sleep(Duration::from_secs(2));
                 set_phase(&shared, Phase::Success);
-                wake(&ui);
+                ui.wake();
                 std::thread::sleep(Duration::from_secs(3));
             }
         })

@@ -6,14 +6,18 @@ description = "Push-to-talk voice dictation for Wayland"
 license = "MIT"
 
 [dependencies]
-crownshell = { path = "../crownshell" }
+# Overlay: a layer surface drawn by Impeller (linked statically, as the bar and
+# dock do) and fed from the worker threads through tokio.
+crownui = { path = "../crownui/crownui", default-features = false, features = [
+  "wayland",
+  "impeller",
+  "static",
+  "tokio",
+] }
+tokio = { version = "1", features = ["sync"] }
 # `~/.config/crownos/input.ron` — the switch, the microphone and the shortcut,
 # all written by the settings panel's Input page and followed live from here.
 crownos-config = { path = "../crownos-config", default-features = false }
-
-# Wayland / event loop (versions matched to crownshell)
-smithay-client-toolkit = "0.19"
-calloop = "0.13"
 
 # ASR
 ort = { version = "=2.0.0-rc.12", features = ["cuda"] }
@@ -42,6 +46,3 @@ codegen-units = 1
 [profile.samply]
 inherits = "release"
 debug = true
-
-[patch.crates-io]
-vello_encoding = { path = "../vendor/vello_encoding-0.9.0" }

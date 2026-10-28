@@ -3,7 +3,7 @@
 //! Hold the shortcut, speak, release: the recording is transcribed locally
 //! with NVIDIA Parakeet TDT 0.6B v2 (ONNX Runtime, CUDA when available)
 //! and typed into the focused window. A small waveform pill rendered
-//! through crownshell sits at the bottom of the screen while it listens
+//! through crownui sits at the bottom of the screen while it listens
 //! and thinks.
 //!
 //! The shortcut — along with the switch that turns the whole thing off, which
@@ -23,18 +23,17 @@ mod hotkey;
 mod inject;
 mod settings;
 mod state;
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "consumed by the injector milestone")
-)]
 mod util;
 mod wav;
 mod waveform;
 
 use anyhow::{Context, Result, anyhow};
-use crownshell::{Anchor, KeyboardInteractivity, Layer, WindowConfig};
-use smithay_client_toolkit::compositor::Region;
-use smithay_client_toolkit::shell::WaylandSurface;
+use crownui::AppConfig;
+use crownui::prelude::{
+    Anchor, KeyboardInteractivity, Layer, LayerExtent, LayerOptions, TRANSPARENT,
+};
+
+use util::wake::Wake;
 
 fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
@@ -62,57 +61,35 @@ fn main() -> Result<()> {
     }
 
     let shared = state::new_shared();
-    let (wake_tx, wake_rx) = calloop::channel::channel::<()>();
+    let wake = Wake::default();
+    let start_workers = {
+        let shared = shared.clone();
+        let wake = wake.clone();
+        move || {
+            if demo {
+                controller::spawn_demo(shared, wake);
+            } else {
+                // The controller says what it is listening for once it has read
+                // `input.ron` — there is no shortcut to name from out here.
+                controller::spawn(shared, wake, controller::Options { force_cpu });
+            }
+        }
+    };
 
-    if demo {
-        controller::spawn_demo(shared.clone(), wake_tx);
-    } else {
-        // The controller says what it is listening for once it has read
-        // `input.ron` — there is no shortcut to name from out here.
-        controller::spawn(shared.clone(), wake_tx, controller::Options { force_cpu });
-    }
-
-    crownshell::run(move |app| {
-        app.create_window(
-            WindowConfig {
-                namespace: "crowndictator".into(),
-                layer: Layer::Overlay,
-                anchor: Anchor::BOTTOM,
-                size: (waveform::WIN_W, waveform::WIN_H),
-                exclusive_zone: 0,
-                keyboard_interactivity: KeyboardInteractivity::None,
-                blur: false,
-                auto_blur_region: false,
-                tick_interval: None,
-            },
-            waveform::Overlay::new(shared),
-        );
-
-        // The overlay is purely decorative: let clicks pass through it.
-        let window = app.windows.last().expect("window just created");
-        let region = Region::new(&app.compositor_state).context("create empty input region")?;
-        window
-            .layer
-            .wl_surface()
-            .set_input_region(Some(region.wl_region()));
-        window.layer.commit();
-
-        app.loop_handle
-            .insert_source(wake_rx, |event, _, app| {
-                if let calloop::channel::Event::Msg(()) = event {
-                    let crownshell::App {
-                        compositor_state,
-                        qh,
-                        windows,
-                        text_cx,
-                        ..
-                    } = app;
-                    for window in windows.iter_mut() {
-                        window.request_frame(compositor_state, qh, text_cx);
-                    }
-                }
-            })
-            .map_err(|e| anyhow!("insert wake channel: {e}"))?;
-        Ok(())
-    })
+    // The overlay is purely decorative: its root takes no pointer input, so
+    // clicks pass through the surface.
+    let layer = LayerOptions::new("crowndictator", Anchor::BOTTOM)
+        .layer(Layer::Overlay)
+        .width(LayerExtent::Fixed(waveform::WIN_W))
+        .height(LayerExtent::Fixed(waveform::WIN_H))
+        .exclusive_zone(0)
+        .keyboard(KeyboardInteractivity::None);
+    let config = AppConfig::new("Crown Dictator")
+        .app_id("crowndictator")
+        .size(waveform::WIN_W, waveform::WIN_H)
+        .clear_color(TRANSPARENT)
+        .accessibility(false)
+        .layer(layer);
+    crownui::run(waveform::overlay(shared, wake, start_workers), config)
+        .context("the overlay stopped")
 }
