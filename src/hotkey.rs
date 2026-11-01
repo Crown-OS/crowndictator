@@ -246,6 +246,7 @@ fn evdev_key(key: KeyCode) -> EvKey {
         KeyCode::PageUp => EvKey::KEY_PAGEUP,
         KeyCode::PageDown => EvKey::KEY_PAGEDOWN,
         KeyCode::CapsLock => EvKey::KEY_CAPSLOCK,
+        KeyCode::PrintScreen => EvKey::KEY_SYSRQ,
 
         KeyCode::ArrowUp => EvKey::KEY_UP,
         KeyCode::ArrowDown => EvKey::KEY_DOWN,
