@@ -82,6 +82,7 @@ pub fn spawn(shared: Shared, ui: Wake, opts: Options) {
     });
 
     announce(&input);
+    audio::watch_sources();
 
     std::thread::Builder::new()
         .name("controller".into())
@@ -136,8 +137,8 @@ pub fn spawn(shared: Shared, ui: Wake, opts: Options) {
 
                     Event::Hotkey(HotkeyEvent::Released) => {
                         let Some(r) = rec.take() else { continue };
-                        let (samples, rate) = r.stop();
-                        let secs = samples.len() as f32 / rate as f32;
+                        let samples = r.stop();
+                        let secs = samples.len() as f32 / audio::CAPTURE_RATE as f32;
                         if secs < MIN_UTTERANCE.as_secs_f32() {
                             log::debug!("controller: {secs:.2}s tap ignored");
                             set_phase(&shared, Phase::Hidden);
@@ -147,7 +148,7 @@ pub fn spawn(shared: Shared, ui: Wake, opts: Options) {
                         set_phase(&shared, Phase::Thinking);
                         ui.wake();
 
-                        let samples_16k = audio::resample_to_16k(&samples, rate);
+                        let samples_16k = audio::resample_to_16k(&samples, audio::CAPTURE_RATE);
                         let (reply_tx, reply_rx) = mpsc::channel();
                         let _ = asr_tx.send(AsrCmd::Transcribe {
                             samples_16k,

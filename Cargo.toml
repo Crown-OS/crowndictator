@@ -26,8 +26,8 @@ hf-hub = { version = "0.4", default-features = false, features = [
   "rustls-tls",
 ] }
 
-# Audio
-cpal = "0.16"
+# Audio: PipeWire capture, noise-suppressed by crown-voiced when it runs.
+crownui-audio = { package = "audio", path = "../crownui/audio" }
 
 # Hotkey
 evdev = "0.13"
