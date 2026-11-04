@@ -15,3 +15,4 @@ jobs:
     secrets: inherit
     with:
       packages: alsa-lib libevdev openssl
+      depends: wayland libxkbcommon vulkan-icd-loader libglvnd wtype wl-clipboard libnotify
