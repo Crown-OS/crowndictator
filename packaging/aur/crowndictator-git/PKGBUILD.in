@@ -3,8 +3,8 @@
 # Template — the sibling commits are filled in by `just aur-render`.
 # Edit this file in the crowndictator repo, never the rendered copy in target/aur.
 #
-# crowndictator itself tracks master here; the two sibling crates are still
-# pinned, because a VCS package that moves three repos at once cannot be
+# crowndictator itself tracks master here; the sibling crates are still
+# pinned, because a VCS package that moves five repos at once cannot be
 # reproduced or bisected when it breaks.
 
 pkgname=crowndictator-git
@@ -14,7 +14,7 @@ pkgdesc="Push-to-talk voice dictation for Wayland, transcribed locally with Para
 arch=('x86_64')
 url="https://github.com/Crown-OS/crowndictator"
 license=('MIT')
-depends=('alsa-lib' 'gcc-libs' 'glibc' 'libglvnd' 'libxkbcommon' 'vulkan-icd-loader' 'wayland')
+depends=('gcc-libs' 'glibc' 'libglvnd' 'libxkbcommon' 'pipewire' 'vulkan-icd-loader' 'wayland')
 makedepends=('cargo' 'git')
 optdepends=(
   'wtype: type transcriptions through the wlr virtual-keyboard protocol (preferred)'
@@ -30,13 +30,19 @@ install="$pkgname.install"
 
 _crownui_commit=@CROWNUI_COMMIT@
 _crownos_config_commit=@CROWNOS_CONFIG_COMMIT@
+_crownos_ipc_commit=@CROWNOS_IPC_COMMIT@
+_crownos_voice_commit=@CROWNOS_VOICE_COMMIT@
 
 source=(
   "crowndictator::git+$url.git"
   "crownui::git+https://github.com/Crown-OS/crownui.git#commit=$_crownui_commit"
   "crownos-config::git+https://github.com/Crown-OS/crownos-config.git#commit=$_crownos_config_commit"
+  "crownos-ipc::git+https://github.com/Crown-OS/crownos-ipc.git#commit=$_crownos_ipc_commit"
+  "crownos-voice::git+https://github.com/Crown-OS/crownos-voice.git#commit=$_crownos_voice_commit"
 )
 sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
             'SKIP'
             'SKIP')
 

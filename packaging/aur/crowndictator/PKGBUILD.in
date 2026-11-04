@@ -10,7 +10,7 @@ pkgdesc="Push-to-talk voice dictation for Wayland, transcribed locally with Para
 arch=('x86_64')
 url="https://github.com/Crown-OS/crowndictator"
 license=('MIT')
-depends=('alsa-lib' 'gcc-libs' 'glibc' 'libglvnd' 'libxkbcommon' 'vulkan-icd-loader' 'wayland')
+depends=('gcc-libs' 'glibc' 'libglvnd' 'libxkbcommon' 'pipewire' 'vulkan-icd-loader' 'wayland')
 makedepends=('cargo' 'git')
 optdepends=(
   'wtype: type transcriptions through the wlr virtual-keyboard protocol (preferred)'
@@ -22,18 +22,25 @@ optdepends=(
 )
 install="$pkgname.install"
 
-# crownui and crownos-config are path dependencies of crowndictator, so they
-# are checked out beside it rather than pulled from crates.io. The source names
-# below are what make ../crownui and ../crownos-config resolve inside $srcdir.
+# crownui and crownos-config are path dependencies of crowndictator, and
+# crownos-ipc and crownos-voice are crownui's audio crate's, so they are checked
+# out beside it rather than pulled from crates.io. The source names below are
+# what make those ../ paths resolve inside $srcdir.
 _crownui_commit=@CROWNUI_COMMIT@
 _crownos_config_commit=@CROWNOS_CONFIG_COMMIT@
+_crownos_ipc_commit=@CROWNOS_IPC_COMMIT@
+_crownos_voice_commit=@CROWNOS_VOICE_COMMIT@
 
 source=(
   "$pkgname::git+$url.git#tag=v$pkgver"
   "crownui::git+https://github.com/Crown-OS/crownui.git#commit=$_crownui_commit"
   "crownos-config::git+https://github.com/Crown-OS/crownos-config.git#commit=$_crownos_config_commit"
+  "crownos-ipc::git+https://github.com/Crown-OS/crownos-ipc.git#commit=$_crownos_ipc_commit"
+  "crownos-voice::git+https://github.com/Crown-OS/crownos-voice.git#commit=$_crownos_voice_commit"
 )
 sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
             'SKIP'
             'SKIP')
 

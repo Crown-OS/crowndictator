@@ -158,10 +158,12 @@ aur-render: aur-clone
     dest="{{repo}}/{{workdir}}/{{pkg}}"
     [[ -f "$src/PKGBUILD.in" ]] || { echo "no template at $src/PKGBUILD.in" >&2; exit 1; }
 
-    # Both sibling crates are path dependencies, so the package can only be
+    # The sibling crates are path dependencies, so the package can only be
     # reproduced from commits that actually exist on their remotes.
     ui_sha="$({{just_executable()}} pin crownui)"
     config_sha="$({{just_executable()}} pin crownos-config)"
+    ipc_sha="$({{just_executable()}} pin crownos-ipc)"
+    voice_sha="$({{just_executable()}} pin crownos-voice)"
 
     if [[ "{{pkg}}" != *-git ]]; then
         tag="v{{version}}"
@@ -173,11 +175,13 @@ aur-render: aur-clone
     sed -e "s|@PKGVER@|{{version}}|g" \
         -e "s|@CROWNUI_COMMIT@|$ui_sha|g" \
         -e "s|@CROWNOS_CONFIG_COMMIT@|$config_sha|g" \
+        -e "s|@CROWNOS_IPC_COMMIT@|$ipc_sha|g" \
+        -e "s|@CROWNOS_VOICE_COMMIT@|$voice_sha|g" \
         "$src/PKGBUILD.in" > "$dest/PKGBUILD"
     cp "{{repo}}/packaging/aur/crowndictator.install" "$dest/{{pkg}}.install"
 
     ( cd "$dest" && makepkg --printsrcinfo > .SRCINFO )
-    echo "rendered $dest/PKGBUILD (crownui ${ui_sha:0:8}, crownos-config ${config_sha:0:8})"
+    echo "rendered $dest/PKGBUILD (crownui ${ui_sha:0:8}, crownos-config ${config_sha:0:8}, crownos-ipc ${ipc_sha:0:8}, crownos-voice ${voice_sha:0:8})"
 
 # Build the staged package with makepkg, end to end (clones sources, compiles).
 aur-build:
