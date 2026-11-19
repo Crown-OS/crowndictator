@@ -20,7 +20,7 @@ tokio = { version = "1", features = ["sync"] }
 crownos-config = { path = "../crownos-config", default-features = false }
 
 # ASR
-ort = { version = "=2.0.0-rc.12", features = ["cuda"] }
+ort = { version = "=2.0.0-rc.15", features = ["cuda"] }
 hf-hub = { version = "0.4", default-features = false, features = [
   "ureq",
   "rustls-tls",

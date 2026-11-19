@@ -8,6 +8,7 @@
 //! drops everything (freeing VRAM/RAM) after an idle timeout.
 
 mod download;
+mod environment;
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -15,7 +16,7 @@ use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result, anyhow};
-use ort::ep::CUDAExecutionProvider;
+use ort::ep::CUDA;
 use ort::inputs;
 use ort::session::Session;
 use ort::session::builder::GraphOptimizationLevel;
@@ -47,7 +48,7 @@ fn oerr<R>(e: ort::Error<R>) -> anyhow::Error {
 }
 
 fn session_for(path: &std::path::Path, gpu: bool) -> Result<Session> {
-    let mut builder = Session::builder()
+    let mut builder = Session::builder(environment::onnx_runtime_environment()?)
         .map_err(oerr)?
         .with_optimization_level(GraphOptimizationLevel::Level3)
         .map_err(oerr)?
@@ -55,7 +56,7 @@ fn session_for(path: &std::path::Path, gpu: bool) -> Result<Session> {
         .map_err(oerr)?;
     if gpu {
         builder = builder
-            .with_execution_providers([CUDAExecutionProvider::default().build().error_on_failure()])
+            .with_execution_providers([CUDA::default().build().error_on_failure()])
             .map_err(oerr)?;
     }
     builder.commit_from_file(path).map_err(oerr)
