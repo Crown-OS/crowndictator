@@ -260,6 +260,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "capture"
+version = "0.2.0"
+dependencies = [
+ "crowntest",
+ "geometry",
+ "graphics",
+ "impeller",
+ "inspect",
+ "libc",
+ "runtime",
+ "semantics",
+ "serde",
+ "serde_json",
+ "taffy-layout",
+ "thiserror",
+ "view",
+ "windowing",
+]
+
+[[package]]
 name = "cc"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -430,6 +450,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "audio",
+ "capture",
  "crownos-config",
  "crownui",
  "dirs",
@@ -440,6 +461,7 @@ dependencies = [
  "ort",
  "tokio",
  "unicode-segmentation",
+ "view",
 ]
 
 [[package]]
@@ -480,6 +502,20 @@ version = "0.1.0"
 dependencies = [
  "crownos-ipc",
  "serde",
+]
+
+[[package]]
+name = "crowntest"
+version = "0.2.0"
+dependencies = [
+ "geometry",
+ "graphics",
+ "input",
+ "runtime",
+ "semantics",
+ "taffy-layout",
+ "view",
+ "windowing",
 ]
 
 [[package]]

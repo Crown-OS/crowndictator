@@ -28,11 +28,6 @@ mod wav;
 mod waveform;
 
 use anyhow::{Context, Result, anyhow};
-use crownui::AppConfig;
-use crownui::prelude::{
-    Anchor, KeyboardInteractivity, Layer, LayerExtent, LayerOptions, TRANSPARENT,
-};
-
 use util::wake::Wake;
 
 fn main() -> Result<()> {
@@ -78,18 +73,9 @@ fn main() -> Result<()> {
 
     // The overlay is purely decorative: its root takes no pointer input, so
     // clicks pass through the surface.
-    let layer = LayerOptions::new("crowndictator", Anchor::BOTTOM)
-        .layer(Layer::Overlay)
-        .width(LayerExtent::Fixed(waveform::WIN_W))
-        .height(LayerExtent::Fixed(waveform::WIN_H))
-        .exclusive_zone(0)
-        .keyboard(KeyboardInteractivity::None);
-    let config = AppConfig::new("Crown Dictator")
-        .app_id("crowndictator")
-        .size(waveform::WIN_W, waveform::WIN_H)
-        .clear_color(TRANSPARENT)
-        .accessibility(false)
-        .layer(layer);
-    crownui::run(waveform::overlay(shared, wake, start_workers), config)
-        .context("the overlay stopped")
+    crownui::run(
+        waveform::overlay(shared, wake, start_workers),
+        waveform::app_config(),
+    )
+    .context("the overlay stopped")
 }

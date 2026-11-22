@@ -11,7 +11,8 @@
 mod animation;
 mod metrics;
 mod paint;
+mod surface;
 mod view;
 
-pub use metrics::{WIN_H, WIN_W};
+pub use surface::app_config;
 pub use view::overlay;
